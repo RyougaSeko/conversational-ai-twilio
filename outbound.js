@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import Fastify from 'fastify';
 import Twilio from 'twilio';
 import WebSocket from 'ws';
+import fastifyCors from '@fastify/cors';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -32,6 +33,14 @@ if (
 const fastify = Fastify();
 fastify.register(fastifyFormBody);
 fastify.register(fastifyWs);
+
+// Add CORS configuration
+fastify.register(fastifyCors, {
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+});
 
 const PORT = process.env.PORT || 8000;
 
@@ -96,9 +105,10 @@ fastify.post('/outbound-call', async (request, reply) => {
     const call = await twilioClient.calls.create({
       from: TWILIO_PHONE_NUMBER,
       to: number,
-      url: `https://${request.headers.host}/outbound-call-twiml?prompt=${encodeURIComponent(
-        prompt
-      )}&first_message=${encodeURIComponent(first_message)}`,
+      url: `https://${request.headers.host}/outbound-call-twiml`,
+      // url: `https://${request.headers.host}/outbound-call-twiml?prompt=${encodeURIComponent(
+      //   prompt
+      // )}&first_message=${encodeURIComponent(first_message)}`,
     });
 
     reply.send({
